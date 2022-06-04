@@ -2,6 +2,7 @@ package ru.maltsev.taskmanager.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.maltsev.taskmanager.model.Question;
@@ -21,7 +22,8 @@ public class QuestionController {
 
     private final AtomicLong counter = new AtomicLong();
 
-    @GetMapping("/all")
+    @GetMapping(value = "/all",
+                produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Question>> getAllQuestions() {
         try {
             List<Question> questions = new ArrayList<Question>();
@@ -35,14 +37,17 @@ public class QuestionController {
         }
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(path = "/{id}",
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Question> getQuestionById(@PathVariable("id") long id) {
         Optional<Question> questionData = questionRepository.findById(id);
         // Если поиск удался (объект в Optional существует) отправляем, иначе 404
         return questionData.map(question -> new ResponseEntity<>(question, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping("/save")
+    @PostMapping(path = "/save",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Question> createQuestion(@RequestBody Question question) {
         try {
             Question q = questionRepository
@@ -53,7 +58,9 @@ public class QuestionController {
         }
     }
 
-    @PutMapping("/edit/{id}")
+    @PutMapping(path = "/edit/{id}",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Question> updateQuestion(@PathVariable("id") long id, @RequestBody Question question) {
         Optional<Question> questionData = questionRepository.findById(id);
         if (questionData.isPresent()) {

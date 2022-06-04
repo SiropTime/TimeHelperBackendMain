@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-//@SpringBootApplication( exclude = {DataSourceAutoConfiguration.class})
 @SpringBootApplication
 public class TaskManagerApplication {
 
