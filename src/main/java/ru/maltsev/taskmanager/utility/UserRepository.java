@@ -6,7 +6,7 @@ import ru.maltsev.taskmanager.model.User;
 
 import java.util.List;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Integer> {
 
     List<User> findByIsAdmin(boolean isAdmin);
     User findUserByUsername(String username);

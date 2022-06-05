@@ -6,9 +6,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.maltsev.taskmanager.model.Post;
+import ru.maltsev.taskmanager.service.PostService;
 import ru.maltsev.taskmanager.utility.PostRepository;
+import ru.maltsev.taskmanager.utility.UserRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -20,21 +21,18 @@ public class PostController {
     @Autowired
     PostRepository postRepository;
 
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    PostService postService;
+
     private final AtomicLong counter = new AtomicLong();
 
-    @GetMapping(value = "/all",
+    @GetMapping(path = "/all",
                 produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Post>> getAllPosts() {
-        try {
-            List<Post> posts = new ArrayList<>();
-            postRepository.findAll().forEach(posts::add);
-            if (posts.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-            return new ResponseEntity<>(posts, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return new ResponseEntity<>(postRepository.findAll(), HttpStatus.OK);
     }
 
     @GetMapping(path = "/{id}",
@@ -46,33 +44,34 @@ public class PostController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping(path = "/create",
+    @PostMapping(path = "/user/{user_id}/post",
                 consumes = MediaType.APPLICATION_JSON_VALUE,
                 produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Post> createPost(@RequestBody Post post) {
+    public ResponseEntity<Post> createPost(@PathVariable(value = "user_id") Integer user_id, @RequestBody Post post) {
         try {
-            Post p = postRepository
-                    .save(new Post(post.getUser(), post.getLabel(), post.getText(), post.getDate()));
-            return new ResponseEntity<>(p, HttpStatus.CREATED);
+            return new ResponseEntity<>(userRepository.findById(user_id).map(user -> {
+                post.setUser(user);
+                return postRepository.save(post);
+            }).get(), HttpStatus.CREATED);
+
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    @PutMapping(path = "/edit/{id}",
+    @PutMapping(path = "/user/{user_id}/post/{id}",
                 consumes = MediaType.APPLICATION_JSON_VALUE,
                 produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Post> editPost(@PathVariable("id") int id, @RequestBody Post post) {
-        Optional<Post> postData = postRepository.findById(id);
-        if (postData.isPresent()) {
-            Post p = postData.get();
-            p.setLabel(post.getLabel());
-            p.setText(post.getText());
-            p.setDate(post.getDate());
-            p.setUser(post.getUser());
-            return new ResponseEntity<>(postRepository.save(p), HttpStatus.OK);
-        } else {
+    public ResponseEntity<Post> editPost(
+            @PathVariable("user_id") int user_id,
+            @PathVariable("id") int id,
+            @RequestBody Post postEdited) {
+        if (!userRepository.existsById(user_id)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-
+        return new ResponseEntity<>(postRepository.findById(id).map(post -> {
+            post.setText(postEdited.getText());
+            post.setLabel(postEdited.getLabel());
+            return postRepository.save(post);
+        }).get(), HttpStatus.OK);
     }
 }
