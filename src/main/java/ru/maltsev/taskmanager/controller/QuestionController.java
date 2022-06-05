@@ -26,7 +26,7 @@ public class QuestionController {
                 produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Question>> getAllQuestions() {
         try {
-            List<Question> questions = new ArrayList<Question>();
+            List<Question> questions = new ArrayList<>();
             questionRepository.findAll().forEach(questions::add);
             if (questions.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -42,7 +42,9 @@ public class QuestionController {
     public ResponseEntity<Question> getQuestionById(@PathVariable("id") long id) {
         Optional<Question> questionData = questionRepository.findById(id);
         // Если поиск удался (объект в Optional существует) отправляем, иначе 404
-        return questionData.map(question -> new ResponseEntity<>(question, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return questionData
+                .map(question -> new ResponseEntity<>(question, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping(path = "/save",
