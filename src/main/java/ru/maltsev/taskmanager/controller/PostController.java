@@ -6,10 +6,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.maltsev.taskmanager.model.Post;
+import ru.maltsev.taskmanager.model.User;
 import ru.maltsev.taskmanager.service.PostService;
 import ru.maltsev.taskmanager.utility.PostRepository;
 import ru.maltsev.taskmanager.utility.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -32,7 +34,15 @@ public class PostController {
     @GetMapping(path = "/all",
                 produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Post>> getAllPosts() {
-        return new ResponseEntity<>(postRepository.findAll(), HttpStatus.OK);
+
+        List<User> admins = userRepository.findByIsAdmin(true);
+        List<Post> posts = new ArrayList<>();
+        admins.forEach(user -> {
+            posts.addAll(postRepository.findPostsByUser(user));
+        });
+
+        return new ResponseEntity<>(posts, HttpStatus.OK);
+
     }
 
     @GetMapping(path = "/{id}",
